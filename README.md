@@ -1,7 +1,4 @@
 # Project2Repo
-#include <Servo.h>
-
-Servo myServo;
 
 const int servoPin  = 9;   // servo signal
 const int switchPin = 2;   // copper switch input
