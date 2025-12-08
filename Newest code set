@@ -1,0 +1,147 @@
+#include <Servo.h>
+
+// -------- SERVOS --------
+Servo servo1;
+Servo servo2;
+Servo servo3;     // servo4 removed because replaced by piezo
+
+// -------- PIEZO --------
+const int piezoPin = 12;   // piezo wired to pin 12
+
+// -------- SWITCH PINS (copper touch) --------
+const int switch1Pin   = 2;  // Servo 1
+const int switch2Pin   = 3;  // Servo 2
+const int switch3Pin   = 4;  // Servo 3
+const int switch4Pin   = 5;  // Piezo trigger
+const int switchLedPin = 6;  // LED trigger
+
+// -------- SERVO SIGNAL PINS --------
+const int servo1Pin  = 9;
+const int servo2Pin  = 10;
+const int servo3Pin  = 11;
+
+// -------- LED PIN --------
+const int ledPin = 7;
+
+// ---- ANGLES ----
+// Servo 1
+const int homePos1   = 0;
+const int activePos1 = 160;
+
+// Servo 2
+const int homePos2   = 160;
+const int activePos2 = 0;
+
+// Servo 3
+const int homePos3   = 0;
+const int activePos3 = 90;
+
+// ---- LATCH STATES ----
+bool servo1Activated = false;
+bool servo2Activated = false;
+bool servo3Activated = false;
+bool piezoActivated  = false;
+bool ledActivated    = false;
+
+void setup() {
+  // Switches
+  pinMode(switch1Pin,   INPUT_PULLUP);
+  pinMode(switch2Pin,   INPUT_PULLUP);
+  pinMode(switch3Pin,   INPUT_PULLUP);
+  pinMode(switch4Pin,   INPUT_PULLUP);
+  pinMode(switchLedPin, INPUT_PULLUP);
+
+  // LED
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
+
+  // Piezo
+  pinMode(piezoPin, OUTPUT);
+  noTone(piezoPin);
+
+  // Servos
+  servo1.attach(servo1Pin, 500, 2500);
+  servo2.attach(servo2Pin, 500, 2500);
+  servo3.attach(servo3Pin, 500, 2500);
+
+  servo1.write(homePos1);
+  servo2.write(homePos2);
+  servo3.write(homePos3);
+}
+
+// Sad descending MJ-style tone
+void playTune() {
+  // soft pleading rise
+  tone(piezoPin, 660, 220);  delay(260);   // E5 (bright start)
+  tone(piezoPin, 622, 200);  delay(240);   // D#5 (tension)
+
+  // emotional fall (inspired by the lyric mood)
+  tone(piezoPin, 587, 300);  delay(330);   // D5
+  tone(piezoPin, 523, 350);  delay(380);   // C5
+  tone(piezoPin, 494, 400);  delay(430);   // B4
+
+  // sad hold: "I don’t wanna leave my baby alone"
+  tone(piezoPin, 440, 500);  delay(540);   // A4 (long, soft, aching)
+
+  // final drop, emotional release
+  tone(piezoPin, 392, 600);  delay(640);   // G4
+
+  noTone(piezoPin);
+}
+
+
+void loop() {
+  int t1 = digitalRead(switch1Pin);
+  int t2 = digitalRead(switch2Pin);
+  int t3 = digitalRead(switch3Pin);
+  int t4 = digitalRead(switch4Pin);   // piezo trigger
+  int tL = digitalRead(switchLedPin);
+
+  // ----- SERVO 1 -----
+  if (!servo1Activated) {
+    if (t1 == LOW) {
+      servo1.write(activePos1);
+      servo1Activated = true;
+    } else {
+      servo1.write(homePos1);
+    }
+  }
+
+  // ----- SERVO 2 -----
+  if (!servo2Activated) {
+    if (t2 == LOW) {
+      servo2.write(activePos2);
+      servo2Activated = true;
+    } else {
+      servo2.write(homePos2);
+    }
+  }
+
+  // ----- SERVO 3 -----
+  if (!servo3Activated) {
+    if (t3 == LOW) {
+      servo3.write(activePos3);
+      servo3Activated = true;
+    } else {
+      servo3.write(homePos3);
+    }
+  }
+
+  // ----- PIEZO -----
+  if (!piezoActivated) {
+    if (t4 == LOW) {     // copper switch on Pin 5
+      playTune();        // play ONCE
+      piezoActivated = true;
+    }
+  }
+
+  // ----- LED -----
+  if (!ledActivated) {
+    if (tL == LOW) {
+      digitalWrite(ledPin, HIGH);
+      ledActivated = true;
+    } else {
+      digitalWrite(ledPin, LOW);
+    }
+  }
+}
